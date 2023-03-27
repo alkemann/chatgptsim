@@ -38,4 +38,3 @@ class Environment:
             for x in range(self.width):
                 cell_type = self.grid[x][y]
                 pygame.draw.rect(screen, cell_type.color, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
-        pygame.display.flip()

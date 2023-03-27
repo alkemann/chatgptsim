@@ -5,7 +5,6 @@ from environment import Environment
 
 
 def main():
-    # Read configuration file
     config = configparser.ConfigParser()
     config.read('config.ini')
     environment = Environment(config)
@@ -14,17 +13,18 @@ def main():
     screen_width = int(config['world']['width']) * int(config['cell']['size'])
     screen_height = int(config['world']['height']) * int(config['cell']['size'])
     screen = pygame.display.set_mode((screen_width, screen_height))
+    clock = pygame.time.Clock()
+    
 
-    # Main loop
     running = True
     while running:
-        # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
 
-        # Display environment
         environment.display(screen)
+        pygame.display.flip()
+        clock.tick(1)
 
 
 if __name__ == '__main__':
