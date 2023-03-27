@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import pygame
 from cells import CellType
@@ -12,18 +13,25 @@ class Environment:
         self.width = width
         self.height = height
         self.cell_size = cell_size
-        self.environment = np.random.randint(0, 2, size=(height, width))
         self.cell_types = self.load_cell_types(config)
+        self.generate()
 
     def load_cell_types(self, config):
         cell_types = {}
         for name, value in config["cell_types"].items():
-            color, nutrient_level = value.split(",")
-            color = tuple(map(int, color.split()))
+            c1,c2,c3, nutrient_level = value.split(",")
+            color = (int(c1), int(c2), int(c3))
             nutrient_level = float(nutrient_level.strip())
             cell_types[name] = CellType(name, color, nutrient_level)
 
         return cell_types
+
+    def generate(self):
+        # Generate a random grid of cells
+        for x in range(self.width // self.cell_size):
+            for y in range(self.height // self.cell_size):
+                cell_type = random.choices(self.cell_types)
+                self.grid[x][y] = CellType(cell_type)
 
     def display(self):
         # Define colors for visualization
