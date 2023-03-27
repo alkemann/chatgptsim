@@ -14,15 +14,14 @@ def main():
     screen_height = int(config['world']['height']) * int(config['cell']['size'])
     screen = pygame.display.set_mode((screen_width, screen_height))
     clock = pygame.time.Clock()
-    
-
+    font = pygame.font.SysFont('Arial', 18)
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
-        environment.display(screen)
+        environment.display(screen, font)
         pygame.display.flip()
         clock.tick(1)
 

@@ -2,10 +2,12 @@ import random
 import numpy as np
 import pygame
 from cells import CellType
+from collections import Counter
 
 
 class Environment:
     def __init__(self, config):
+        self.counts = None
         self.width = int(config['world']['width'])
         self.height =  int(config['world']['height'])
         self.cell_size =  int(config['cell']['size'])
@@ -40,9 +42,15 @@ class Environment:
                         for i in range(-cluster_radius, cluster_radius+1):
                             if 0 <= y+j < self.height and 0 <= x+i < self.width:
                                 self.grid[y+j][x+i] = ct
+        self.counts = Counter(cell.name for row in self.grid for cell in row)
 
-    def display(self, screen):
+    def display(self, screen, font):
         for y in range(self.height):
             for x in range(self.width):
                 cell_type = self.grid[y][x]
                 pygame.draw.rect(screen, cell_type.color, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
+        g = self.counts['grass']
+        w = self.counts['water']
+        r = self.counts['rock']
+        text = font.render(f"Grass: {g:,.0f} Water: {w:,.0f} Rock: {r:,.0f}", True, (255, 255, 255))
+        screen.blit(text, (10, 10))
