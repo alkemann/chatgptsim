@@ -1,13 +1,14 @@
 import pygame
-import numpy as np
 import configparser
 from environment import Environment
+from creatures import generate_creatures
 
 
 def main():
     config = configparser.ConfigParser()
     config.read('config.ini')
     environment = Environment(config)
+    creatures = generate_creatures(config)
     pygame.init()
     pygame.display.set_caption("Evolution Simulation")
     screen_width = int(config['world']['width']) * int(config['cell']['size'])
@@ -21,7 +22,15 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
+        for creature in creatures:
+            creature.update()
+            
         environment.display(screen, font)
+        
+        
+        for creature in creatures:
+            creature.render(screen, environment.cell_size)
+
         pygame.display.flip()
         clock.tick(1)
 
