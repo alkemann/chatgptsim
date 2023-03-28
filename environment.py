@@ -1,3 +1,4 @@
+import math
 import random
 import numpy as np
 import pygame
@@ -32,15 +33,15 @@ class Environment:
 
     def generate(self):
         for ct in self.cell_types:
-            if ct.regions > 0:
-                cluster_radius = ct.cluster
-                for _ in range(ct.regions):
-                    x = random.randint(0, self.width-1)
-                    y = random.randint(0, self.height-1)
-                    self.grid[y][x] = ct
-                    for j in range(-cluster_radius, cluster_radius+1):
-                        for i in range(-cluster_radius, cluster_radius+1):
-                            if 0 <= y+j < self.height and 0 <= x+i < self.width:
+            cluster_radius = random.randint(int(ct.cluster * 0.5), int(ct.cluster * 1.5))
+            for _ in range(ct.regions):
+                x = random.randint(cluster_radius, self.width - cluster_radius - 1)
+                y = random.randint(cluster_radius, self.height - cluster_radius - 1)
+                self.grid[y][x] = ct
+                for j in range(-cluster_radius, cluster_radius + 1):
+                    for i in range(-cluster_radius, cluster_radius + 1):
+                        if 0 <= y+j < self.height and 0 <= x+i < self.width:
+                            if math.sqrt(i**2 + j**2) <= cluster_radius:
                                 self.grid[y+j][x+i] = ct
         self.counts = Counter(cell.name for row in self.grid for cell in row)
 
