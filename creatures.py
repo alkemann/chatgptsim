@@ -12,16 +12,15 @@ class Creature:
         self.size = size
         self.vx = 0
         self.vy = 0
-        self.thirst = random.randint(0, 50)
+        self.thirst = random.randint(35, 50)
         self.thirst_threshold = 50  # arbitrary value for now
         self.target_cell: Cell = None
         self.home = (x, y)
 
-    def seek_water(self, cells):
+    def seek_water(self, cells) -> None:
         water_cells = [cell for cell in cells if cell.name == "water"]
         if not water_cells:
             raise ValueError("No water cells provided to creature seek_water")
-            self.target_cell = None
         self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
 
     def update(self, cells):
@@ -30,13 +29,12 @@ class Creature:
 
         self.thirst += 1
 
-        if self.thirst >= self.thirst_threshold:
+        if self.thirst >= self.thirst_threshold and not self.target_cell:
             print("Seeking water")
-            self.target_cell = self.seek_water(cells)
+            self.seek_water(cells)
             
         if self.target_cell:
             if self.target_cell.x == self.x and self.target_cell.y == self.y:
-                print("Reached target cell")
                 if self.thirst > 0 and self.target_cell.name == "water":
                     print("Drinking")
                     self.thirst -= 5
@@ -44,8 +42,10 @@ class Creature:
                         self.thirst = 0
                         self.target_cell = None
                     return  # don't move if we're on water and drinking
+                self.target_cell = None
+                print("Done drinking")
             else:
-                print("Moving towards target cell")
+                # print("Moving towards target cell")
                 dx = self.target_cell.x - self.x
                 dy = self.target_cell.y - self.y
                 magnitude = (dx ** 2 + dy ** 2) ** 0.5
