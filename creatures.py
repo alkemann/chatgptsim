@@ -1,5 +1,6 @@
 import random
 import pygame
+import typing
 from cells import Cell
 
 
