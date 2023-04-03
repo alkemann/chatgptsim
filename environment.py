@@ -2,7 +2,7 @@ import math
 import random
 import numpy as np
 import pygame
-from cells import CellType
+from cells import CellType, Cell
 from collections import Counter
 
 
@@ -15,6 +15,7 @@ class Environment:
         self.cell_types = self.load_cell_types(config)
         rock = self.cell_types[0]
         self.grid = [[rock for x in range(self.width)] for y in range(self.height)]
+        self.cell_list = []
         self.generate()
 
     def load_cell_types(self, config):
@@ -35,13 +36,24 @@ class Environment:
         for ct in self.cell_types:
             cluster_radius = random.randint(int(ct.cluster * 0.5), int(ct.cluster * 1.5))
             for _ in range(ct.regions):
-                x = random.randint(0, self.width)
-                y = random.randint(0, self.height)
-                self.grid[y][x] = ct
+                x = random.randint(0, self.width - 1)
+                y = random.randint(0, self.height - 1)
+                try:
+                    self.grid[y][x] = ct
+                except IndexError as e:
+                    print(f"Grid out of bounds: x={x} of {len(self.grid[0])}, y={y} of {len(self.grid)}")
+                    exit()
                 for j in range(-cluster_radius, cluster_radius + 1):
                     for i in range(-cluster_radius, cluster_radius + 1):
                         if (0 <= y+j < self.height and 0 <= x+i < self.width) and math.sqrt(i**2 + j**2) <= cluster_radius:
                             self.grid[y+j][x+i] = ct
+
+        for y in range(self.height):
+            for x in range(self.width):
+                ct = self.grid[y][x]
+                cell = Cell(x, y, ct.name, ct.color, ct.nutrient_level, ct.regions, ct.cluster)
+                self.grid[y][x] = cell
+                self.cell_list.append(cell)
 
         self.counts = Counter(cell.name for row in self.grid for cell in row)
 

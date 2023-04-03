@@ -21,9 +21,12 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
 
         for creature in creatures:
-            creature.update()
+            creature.update(environment.cell_list)
             
         environment.display(screen, font)
         
@@ -32,7 +35,8 @@ def main():
             creature.render(screen, environment.cell_size)
 
         pygame.display.flip()
-        clock.tick(1)
+        clock.tick(int(config['world']['fps']))
+    pygame.quit()
 
 
 if __name__ == '__main__':

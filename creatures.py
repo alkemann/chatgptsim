@@ -1,5 +1,6 @@
 import random
 import pygame
+from cells import Cell
 
 
 class Creature:
@@ -11,12 +12,64 @@ class Creature:
         self.size = size
         self.vx = 0
         self.vy = 0
+        self.thirst = random.randint(0, 50)
+        self.thirst_threshold = 50  # arbitrary value for now
+        self.target_cell: Cell = None
+        self.home = (x, y)
 
-    def update(self):
-        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        self.vx, self.vy = random.choice(directions)
-        self.x += self.vx * self.speed
-        self.y += self.vy * self.speed
+    def seek_water(self, cells):
+        water_cells = [cell for cell in cells if cell.name == "water"]
+        if not water_cells:
+            raise ValueError("No water cells provided to creature seek_water")
+            self.target_cell = None
+        self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
+
+    def update(self, cells):
+        if not cells:
+            raise ValueError("No cells provided to creature update")
+
+        self.thirst += 1
+
+        if self.thirst >= self.thirst_threshold:
+            print("Seeking water")
+            self.target_cell = self.seek_water(cells)
+            
+        if self.target_cell:
+            if self.target_cell.x == self.x and self.target_cell.y == self.y:
+                print("Reached target cell")
+                if self.thirst > 0 and self.target_cell.name == "water":
+                    print("Drinking")
+                    self.thirst -= 5
+                    if self.thirst < 0:
+                        self.thirst = 0
+                        self.target_cell = None
+                    return  # don't move if we're on water and drinking
+            else:
+                print("Moving towards target cell")
+                dx = self.target_cell.x - self.x
+                dy = self.target_cell.y - self.y
+                magnitude = (dx ** 2 + dy ** 2) ** 0.5
+                if magnitude != 0:
+                    self.vx = dx / magnitude
+                    self.vy = dy / magnitude
+                    self.x += self.vx * self.speed
+                    self.y += self.vy * self.speed
+        elif (((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5) > 10: # self.x != self.home[0] or self.y != self.home[1]:  # move towards home
+            print("Moving towards home")
+            dx = self.home[0] - self.x
+            dy = self.home[1] - self.y
+            magnitude = (dx ** 2 + dy ** 2) ** 0.5
+            if magnitude != 0:
+                self.vx = dx / magnitude
+                self.vy = dy / magnitude
+                self.x += self.vx * self.speed
+                self.y += self.vy * self.speed
+        else:  # move randomly
+            print("Moving randomly")
+            directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            self.vx, self.vy = random.choice(directions)
+            self.x += self.vx * self.speed
+            self.y += self.vy * self.speed
 
     def render(self, screen, cell_size):
         x_pos = (self.x * cell_size) + (cell_size // 2)
