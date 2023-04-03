@@ -27,53 +27,66 @@ class Creature:
     def update(self, cells):
         if not cells:
             raise ValueError("No cells provided to creature update")
-
+            
         self.thirst += 1
 
         if self.thirst >= self.thirst_threshold and not self.target_cell:
-            # print("Seeking water")
             self.seek_water(cells)
 
         if self.target_cell:
-            if self.target_cell.x == self.x and self.target_cell.y == self.y:
-                if self.thirst > 0 and self.target_cell.name == "water":
-                    # print("Drinking")
-                    self.thirst -= 5
-                    if self.thirst < 0:
-                        self.thirst = 0
-                        self.target_cell = None
-                    return  # don't move if we're on water and drinking
-                self.target_cell = None
-                # print("Done drinking")
-            else:
-                # print("Moving towards target cell")
-                dx = self.target_cell.x - self.x
-                dy = self.target_cell.y - self.y
-                distance_to_target = (dx ** 2 + dy ** 2) ** 0.5
-                if distance_to_target < self.speed:
-                    self.x = self.target_cell.x
-                    self.y = self.target_cell.y
-                elif distance_to_target != 0:
-                    self.vx = dx / distance_to_target
-                    self.vy = dy / distance_to_target
-                    self.x += self.vx * self.speed
-                    self.y += self.vy * self.speed
+            self.move_towards_target(cells)
         elif (((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5) > 10:
-            # print("Moving towards home")
-            dx = self.home[0] - self.x
-            dy = self.home[1] - self.y
-            magnitude = (dx ** 2 + dy ** 2) ** 0.5
-            if magnitude != 0:
-                self.vx = dx / magnitude
-                self.vy = dy / magnitude
+            self.move_towards_home()
+        else:
+            self.move_randomly()
+
+    def seek_water(self, cells):
+        water_cells = [cell for cell in cells if cell.name == "water"]
+        if not water_cells:
+            raise ValueError("No water cells provided to creature seek_water")
+        self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
+
+    def move_towards_target(self, cells):
+        if self.target_cell.x == self.x and self.target_cell.y == self.y:
+            if self.thirst > 0 and self.target_cell.name == "water":
+                self.drink()
+                return
+            self.target_cell = None
+        else:
+            dx = self.target_cell.x - self.x
+            dy = self.target_cell.y - self.y
+            distance_to_target = (dx ** 2 + dy ** 2) ** 0.5
+            if distance_to_target < self.speed:
+                self.x = self.target_cell.x
+                self.y = self.target_cell.y
+            elif distance_to_target != 0:
+                self.vx = dx / distance_to_target
+                self.vy = dy / distance_to_target
                 self.x += self.vx * self.speed
                 self.y += self.vy * self.speed
-        else:
-            # print("Moving randomly")
-            directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-            self.vx, self.vy = random.choice(directions)
+
+    def drink(self):
+        self.thirst -= 5
+        if self.thirst < 0:
+            self.thirst = 0
+            self.target_cell = None
+
+    def move_towards_home(self):
+        dx = self.home[0] - self.x
+        dy = self.home[1] - self.y
+        magnitude = (dx ** 2 + dy ** 2) ** 0.5
+        if magnitude != 0:
+            self.vx = dx / magnitude
+            self.vy = dy / magnitude
             self.x += self.vx * self.speed
             self.y += self.vy * self.speed
+
+    def move_randomly(self):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        self.vx, self.vy = random.choice(directions)
+        self.x += self.vx * self.speed
+        self.y += self.vy * self.speed
+
 
     def render(self, screen, cell_size):
         x_pos = (self.x * cell_size) + (cell_size // 2)
@@ -100,3 +113,4 @@ def generate_creatures(config, cells):
                 
     return creatures
 
+# We have implemented thirst. Now we should implement the prey's feed strategy. We must add the hunger next. I have configured that they live in the cell type called woods, so they must travel to a grass cell to feed. Since we want them to devide their time between water (for thirst), grass (for hunger) and home (for rest/safty) we must add some decision making logic where it weighs it's thirst and hunger and decides what it should do. 
