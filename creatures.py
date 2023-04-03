@@ -18,15 +18,7 @@ class Creature:
         self.target_cell: Cell = None
         self.home = (x, y)
 
-    def seek_water(self, cells) -> None:
-        water_cells = [cell for cell in cells if cell.name == "water"]
-        if not water_cells:
-            raise ValueError("No water cells provided to creature seek_water")
-        self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
-
-    def update(self, cells):
-        if not cells:
-            raise ValueError("No cells provided to creature update")
+    def update(self, cells: typing.List[Cell]) -> None:
             
         self.thirst += 1
 
@@ -34,11 +26,17 @@ class Creature:
             self.seek_water(cells)
 
         if self.target_cell:
-            self.move_towards_target(cells)
+            self.move_towards_target()
         elif (((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5) > 10:
             self.move_towards_home()
         else:
             self.move_randomly()
+
+    def seek_water(self, cells) -> None:
+        water_cells = [cell for cell in cells if cell.name == "water"]
+        if not water_cells:
+            raise ValueError("No water cells provided to creature seek_water")
+        self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
 
     def seek_water(self, cells):
         water_cells = [cell for cell in cells if cell.name == "water"]
@@ -113,4 +111,4 @@ def generate_creatures(config, cells):
                 
     return creatures
 
-# We have implemented thirst. Now we should implement the prey's feed strategy. We must add the hunger next. I have configured that they live in the cell type called woods, so they must travel to a grass cell to feed. Since we want them to devide their time between water (for thirst), grass (for hunger) and home (for rest/safty) we must add some decision making logic where it weighs it's thirst and hunger and decides what it should do. 
+# 

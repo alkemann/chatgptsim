@@ -10,8 +10,8 @@ class Environment:
     def __init__(self, config):
         self.counts = None
         self.width = int(config['world']['width'])
-        self.height =  int(config['world']['height'])
-        self.cell_size =  int(config['cell_size'])
+        self.height = int(config['world']['height'])
+        self.cell_size = int(config['world']['cell_size'])
         self.cell_types = self.load_cell_types(config)
         rock = self.cell_types[0]
         self.grid = [[rock for x in range(self.width)] for y in range(self.height)]
@@ -24,10 +24,9 @@ class Environment:
             if section.startswith("cell/"):
                 name = section[5:]
                 color = tuple(map(int, config[section]["color"].split(",")))
-                nutrient_level = float(config[section]["nutrient_level"])
                 regions = int(config[section]["regions"])
                 cluster = int(config[section]["cluster"])
-                cell_types.append(CellType(name, color, nutrient_level, regions, cluster))
+                cell_types.append(CellType(name, color, regions, cluster))
         return cell_types
 
     def generate(self):
@@ -49,7 +48,7 @@ class Environment:
         for y in range(self.height):
             for x in range(self.width):
                 ct = self.grid[y][x]
-                cell = Cell(x, y, ct.name, ct.color, ct.nutrient_level, ct.regions, ct.cluster)
+                cell = Cell(x, y, ct.name, ct.color, ct.regions, ct.cluster)
                 self.grid[y][x] = cell
                 self.cell_list.append(cell)
 
