@@ -30,32 +30,35 @@ class Creature:
         self.thirst += 1
 
         if self.thirst >= self.thirst_threshold and not self.target_cell:
-            print("Seeking water")
+            # print("Seeking water")
             self.seek_water(cells)
-            
+
         if self.target_cell:
             if self.target_cell.x == self.x and self.target_cell.y == self.y:
                 if self.thirst > 0 and self.target_cell.name == "water":
-                    print("Drinking")
+                    # print("Drinking")
                     self.thirst -= 5
                     if self.thirst < 0:
                         self.thirst = 0
                         self.target_cell = None
                     return  # don't move if we're on water and drinking
                 self.target_cell = None
-                print("Done drinking")
+                # print("Done drinking")
             else:
                 # print("Moving towards target cell")
                 dx = self.target_cell.x - self.x
                 dy = self.target_cell.y - self.y
-                magnitude = (dx ** 2 + dy ** 2) ** 0.5
-                if magnitude != 0:
-                    self.vx = dx / magnitude
-                    self.vy = dy / magnitude
+                distance_to_target = (dx ** 2 + dy ** 2) ** 0.5
+                if distance_to_target < self.speed:
+                    self.x = self.target_cell.x
+                    self.y = self.target_cell.y
+                elif distance_to_target != 0:
+                    self.vx = dx / distance_to_target
+                    self.vy = dy / distance_to_target
                     self.x += self.vx * self.speed
                     self.y += self.vy * self.speed
-        elif (((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5) > 10: # self.x != self.home[0] or self.y != self.home[1]:  # move towards home
-            print("Moving towards home")
+        elif (((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5) > 10:
+            # print("Moving towards home")
             dx = self.home[0] - self.x
             dy = self.home[1] - self.y
             magnitude = (dx ** 2 + dy ** 2) ** 0.5
@@ -64,8 +67,8 @@ class Creature:
                 self.vy = dy / magnitude
                 self.x += self.vx * self.speed
                 self.y += self.vy * self.speed
-        else:  # move randomly
-            print("Moving randomly")
+        else:
+            # print("Moving randomly")
             directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
             self.vx, self.vy = random.choice(directions)
             self.x += self.vx * self.speed
