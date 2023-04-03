@@ -14,60 +14,79 @@ class Creature:
         self.size = size
         self.vx = 0
         self.vy = 0
-        self.thirst = random.randint(35, 50)
-        self.thirst_threshold = 50  # arbitrary value for now
+        self.thirst = random.randint(0, 50)
+        self.thirst_threshold = 100
+        self.hunger = random.randint(0, 100)
+        self.hunger_threshold = 100
+        self.stamina = random.randint(0, 100)
+        self.stamina_threshold = 100
         self.target_cell: Cell = None
         self.home = (x, y)
 
     def update(self, cells: typing.List[Cell]) -> None:
-            
-        self.thirst += 1
+        self.thirst += 2
+        self.hunger += 2
+        self.stamina += 2
 
-        if self.thirst >= self.thirst_threshold and not self.target_cell:
-            self.seek_water(cells)
+        if not self.target_cell:
+            if self.stamina >= self.stamina_threshold:
+                self.target_cell = Cell(self.home[0], self.home[1], "home", (0, 0, 0), 0, 0)
+            elif self.thirst >= self.thirst_threshold:
+                self.seek_water(cells)
+            elif self.hunger >= self.hunger_threshold:
+                self.seek_grass(cells)
 
         if self.target_cell:
-            self.move_towards_target()
-        elif (((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5) > 10:
+            return self.has_target()
+
+        distance_to_home = ((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5
+        if distance_to_home > 10:
             self.move_towards_home()
         else:
-            self.move_randomly()
+            if random.random() < 0.5:
+                self.move_randomly()
 
-    def seek_water(self, cells) -> None:
-        water_cells = [cell for cell in cells if cell.name == "water"]
-        if not water_cells:
-            raise ValueError("No water cells provided to creature seek_water")
-        self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
+    def seek_grass(self, cells: typing.List[Cell]) -> None:
+        self.seek_closest_cell(cells, "grass")
 
-    def seek_water(self, cells):
-        water_cells = [cell for cell in cells if cell.name == "water"]
-        if not water_cells:
-            raise ValueError("No water cells provided to creature seek_water")
-        self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
+    def seek_water(self, cells: typing.List[Cell]) -> None:
+        self.seek_closest_cell(cells, "water")
 
-    def move_towards_target(self):
+    def has_target(self):
         if self.target_cell.x == self.x and self.target_cell.y == self.y:
+            if random.random() < 0.1:
+                self.move_randomly()
             if self.thirst > 0 and self.target_cell.name == "water":
-                self.drink()
-                return
-            self.target_cell = None
+                return self.drink()
+            if self.hunger > 0 and self.target_cell.name == "grass":
+                return self.eat()
+            if self.stamina > 0 and self.target_cell.name == "home":
+                return self.rest()
+            self.target_cell = None  # reset target cell
         else:
-            dx = self.target_cell.x - self.x
-            dy = self.target_cell.y - self.y
-            distance_to_target = (dx ** 2 + dy ** 2) ** 0.5
-            if distance_to_target < self.speed:
-                self.x = self.target_cell.x
-                self.y = self.target_cell.y
-            elif distance_to_target != 0:
-                self.vx = dx / distance_to_target
-                self.vy = dy / distance_to_target
-                self.x += self.vx * self.speed
-                self.y += self.vy * self.speed
+            self.move_towards_target()
+
+    def rest(self):
+        self.stamina -= 4
+        self.hunger -= 1  # to simulate that resting takes less food than moving
+        self.thirst -= 1  # to simulate that resting takes less water than moving
+        if self.stamina <= 0:
+            self.target_cell = None
+
+    def eat(self):
+        self.hunger -= 6
+        if self.hunger <= 0:
+            self.target_cell = None
+        if self.hunger > self.hunger_threshold * 0.5 and self.thirst > self.thirst_threshold:
+            self.target_cell = None
+            # stop eatig and seek water
+
+    # ... more methods ...
 
     def drink(self):
-        self.thirst -= 5
+        self.thirst -= 50
+        self.hunger -= 25  # to not bounce straight to eating
         if self.thirst < 0:
-            self.thirst = 0
             self.target_cell = None
 
     def move_towards_home(self):
@@ -86,12 +105,32 @@ class Creature:
         self.x += self.vx * self.speed
         self.y += self.vy * self.speed
 
+    def move_towards_target(self):
+        dx = self.target_cell.x - self.x
+        dy = self.target_cell.y - self.y
+        distance_to_target = (dx ** 2 + dy ** 2) ** 0.5
+        if distance_to_target < self.speed:
+            self.x = self.target_cell.x
+            self.y = self.target_cell.y
+        elif distance_to_target != 0:
+            self.vx = dx / distance_to_target
+            self.vy = dy / distance_to_target
+            self.x += self.vx * self.speed
+            self.y += self.vy * self.speed
 
     def render(self, screen, cell_size):
         x_pos = (self.x * cell_size) + (cell_size // 2)
         y_pos = (self.y * cell_size) + (cell_size // 2)
         pygame.draw.circle(screen, self.color, (x_pos, y_pos), self.size)
+        x_pos = (self.home[0] * cell_size) + (cell_size // 2)
+        y_pos = (self.home[1] * cell_size) + (cell_size // 2)
+        pygame.draw.circle(screen, self.color, (x_pos, y_pos), self.size/2)
 
+    def seek_closest_cell(self, cells: typing.List[Cell], target_cell_name: str) -> None:
+        target_cells = [cell for cell in cells if cell.name == target_cell_name]
+        if not target_cells:
+            raise ValueError(f"No {target_cell_name} cells provided to creature seek_closest_cell")
+        self.target_cell = min(target_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
 
 def generate_creatures(config, cells):
     creatures = []

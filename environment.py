@@ -31,8 +31,8 @@ class Environment:
 
     def generate(self):
         for ct in self.cell_types:
-            cluster_radius = random.randint(int(ct.cluster * 0.5), int(ct.cluster * 1.5))
             for _ in range(ct.regions):
+                cluster_radius = random.randint(int(ct.cluster * 0.5), int(ct.cluster * 1.5))
                 x = random.randint(0, self.width - 1)
                 y = random.randint(0, self.height - 1)
                 try:
