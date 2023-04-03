@@ -46,7 +46,7 @@ class Creature:
             raise ValueError("No water cells provided to creature seek_water")
         self.target_cell = min(water_cells, key=lambda cell: ((cell.x - self.x) ** 2 + (cell.y - self.y) ** 2) ** 0.5)
 
-    def move_towards_target(self, cells):
+    def move_towards_target(self):
         if self.target_cell.x == self.x and self.target_cell.y == self.y:
             if self.thirst > 0 and self.target_cell.name == "water":
                 self.drink()

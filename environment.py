@@ -11,7 +11,7 @@ class Environment:
         self.counts = None
         self.width = int(config['world']['width'])
         self.height =  int(config['world']['height'])
-        self.cell_size =  int(config['cell']['size'])
+        self.cell_size =  int(config['cell_size'])
         self.cell_types = self.load_cell_types(config)
         rock = self.cell_types[0]
         self.grid = [[rock for x in range(self.width)] for y in range(self.height)]
@@ -20,16 +20,14 @@ class Environment:
 
     def load_cell_types(self, config):
         cell_types = []
-        for name, value in config["cell_types"].items():
-            c1,c2,c3, nl, r, cr = value.split(",")
-            color = (int(c1), int(c2), int(c3))
-            nutrient_level = float(nl.strip())
-            regions = int(r)
-            cluster = int(cr)
-            cell_types.append(CellType(name, color, 
-                                       nutrient_level,
-                                       regions, cluster
-                                       ))
+        for section in config.sections():
+            if section.startswith("cell/"):
+                name = section[5:]
+                color = tuple(map(int, config[section]["color"].split(",")))
+                nutrient_level = float(config[section]["nutrient_level"])
+                regions = int(config[section]["regions"])
+                cluster = int(config[section]["cluster"])
+                cell_types.append(CellType(name, color, nutrient_level, regions, cluster))
         return cell_types
 
     def generate(self):
