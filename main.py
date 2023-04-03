@@ -8,7 +8,7 @@ def main():
     config = configparser.ConfigParser()
     config.read('config.ini')
     environment = Environment(config)
-    creatures = generate_creatures(config)
+    creatures = generate_creatures(config, environment.cell_list)
     pygame.init()
     pygame.display.set_caption("Evolution Simulation")
     screen_width = int(config['world']['width']) * int(config['cell']['size'])

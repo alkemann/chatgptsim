@@ -4,7 +4,8 @@ from cells import Cell
 
 
 class Creature:
-    def __init__(self, x, y, speed, color, size):
+    def __init__(self, name, x, y, speed, color, size):
+        self.name = name
         self.x = x
         self.y = y
         self.speed = speed
@@ -80,26 +81,22 @@ class Creature:
         pygame.draw.circle(screen, self.color, (x_pos, y_pos), self.size)
 
 
-def generate_creatures(config):
-    width = int(config['world']['width'])
-    height = int(config['world']['height'])
+def generate_creatures(config, cells):
     creatures = []
-    num_prey = int(config['species']['prey_count'])
-    speed_prey = int(config['species']['prey_speed'])
-    color_prey = [int(x) for x in config['species']['prey_color'].split(',')]
-    size_prey = int(config['species']['prey_size'])
-    for _ in range(num_prey):
-        x = random.randint(0, width-1)
-        y = random.randint(0, height-1)
-        prey = Creature(x, y, speed_prey, color_prey, size_prey)
-        creatures.append(prey)
-    num_predators = int(config['species']['predator_count'])
-    speed_predator = int(config['species']['predator_speed'])
-    color_predator = [int(x) for x in config['species']['predator_color'].split(',')]
-    size_predator = int(config['species']['predator_size'])
-    for _ in range(num_predators):
-        x = random.randint(0, width-1)
-        y = random.randint(0, height-1)
-        predator = Creature(x, y, speed_predator, color_predator, size_predator)
-        creatures.append(predator)
+    # Iterate over all sections and create creatures for each species
+    for section in config.sections():
+        if section.startswith('species/'):
+            creature_type = section[8:]  # Extract the species name
+            number = int(config[section]['count'])
+            speed = int(config[section]['speed'])
+            color = [int(x) for x in config[section]['color'].split(',')]
+            size = int(config[section]['size'])
+            home_type = config[section]['home']
+            possible_home_cells = [cell for cell in cells if cell.name == home_type]
+            for _ in range(number):
+                new_home = random.choice(possible_home_cells)
+                creature = Creature(creature_type, new_home.x, new_home.y, speed, color, size)
+                creatures.append(creature)
+                
     return creatures
+
