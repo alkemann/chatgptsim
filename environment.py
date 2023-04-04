@@ -1,6 +1,5 @@
 import math
 import random
-import numpy as np
 import pygame
 from cells import CellType, Cell
 from collections import Counter

@@ -14,11 +14,11 @@ class Creature:
         self.size = size
         self.vx = 0
         self.vy = 0
-        self.thirst = random.randint(0, 50)
+        self.thirst = random.randint(0, thirst_threshold)
         self.thirst_threshold = thirst_threshold
-        self.hunger = random.randint(0, 100)
+        self.hunger = random.randint(0, hunger_threshold)
         self.hunger_threshold = hunger_threshold
-        self.stamina = random.randint(0, 100)
+        self.stamina = random.randint(0, stamina_threshold)
         self.stamina_threshold = stamina_threshold
         self.target_cell: Cell = None
         self.home = (x, y)
@@ -54,7 +54,7 @@ class Creature:
     def seek_water(self, cells: typing.List[Cell]) -> None:
         self.seek_closest_cell(cells, "water")
 
-    def has_target(self):
+        else:
         if self.target_cell.x == self.x and self.target_cell.y == self.y:
             if random.random() < 0.1:
                 self.move_randomly()
@@ -145,7 +145,7 @@ def generate_creatures(config, cells):
             color = [int(x) for x in config[section]['color'].split(',')]
             size = int(config[section]['size'])
             pasture = config[section]['pasture']
-            predator = bool(config[section]['predator'])
+            predator = config.getboolean(section, 'predator')
             home_type = config[section]['home']
             possible_home_cells = [cell for cell in cells if cell.name == home_type]
             hunger_threshold = int(config[section]['hunger_threshold'])
