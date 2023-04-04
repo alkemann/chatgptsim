@@ -5,7 +5,7 @@ from cells import Cell
 
 
 class Creature:
-    def __init__(self, name, x, y, speed, color, size, pasture, predator):
+    def __init__(self, name, x, y, speed, color, size, pasture, predator, hunger_threshold, thirst_threshold, stamina_threshold):
         self.name = name
         self.x = x
         self.y = y
@@ -15,11 +15,11 @@ class Creature:
         self.vx = 0
         self.vy = 0
         self.thirst = random.randint(0, 50)
-        self.thirst_threshold = 100
+        self.thirst_threshold = thirst_threshold
         self.hunger = random.randint(0, 100)
-        self.hunger_threshold = 100
+        self.hunger_threshold = hunger_threshold
         self.stamina = random.randint(0, 100)
-        self.stamina_threshold = 100
+        self.stamina_threshold = stamina_threshold
         self.target_cell: Cell = None
         self.home = (x, y)
         self.pasture = pasture
@@ -68,6 +68,8 @@ class Creature:
         else:
             self.move_towards_target()
 
+    # ... more methods ...
+
     def rest(self):
         self.stamina -= 4
         self.hunger -= 1  # to simulate that resting takes less food than moving
@@ -82,8 +84,6 @@ class Creature:
         if self.hunger > self.hunger_threshold * 0.5 and self.thirst > self.thirst_threshold:
             self.target_cell = None
             # stop eatig and seek water
-
-    # ... more methods ...
 
     def drink(self):
         self.thirst -= 50
@@ -148,9 +148,13 @@ def generate_creatures(config, cells):
             predator = bool(config[section]['predator'])
             home_type = config[section]['home']
             possible_home_cells = [cell for cell in cells if cell.name == home_type]
+            hunger_threshold = int(config[section]['hunger_threshold'])
+            thirst_threshold = int(config[section]['thirst_threshold'])
+            stamina_threshold = int(config[section]['stamina_threshold'])
             for _ in range(number):
                 new_home = random.choice(possible_home_cells)
-                creature = Creature(creature_type, new_home.x, new_home.y, speed, color, size, pasture, predator)
+                creature = Creature(creature_type, new_home.x, new_home.y, speed, color, size, pasture, predator,
+                                    stamina_threshold=stamina_threshold, hunger_threshold=hunger_threshold, thirst_threshold=thirst_threshold)
                 creatures.append(creature)
 
     return creatures
