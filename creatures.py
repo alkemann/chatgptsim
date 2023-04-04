@@ -5,7 +5,7 @@ from cells import Cell
 
 
 class Creature:
-    def __init__(self, name, x, y, speed, color, size):
+    def __init__(self, name, x, y, speed, color, size, pasture, predator):
         self.name = name
         self.x = x
         self.y = y
@@ -22,6 +22,8 @@ class Creature:
         self.stamina_threshold = 100
         self.target_cell: Cell = None
         self.home = (x, y)
+        self.pasture = pasture
+        self.predator = predator
 
     def update(self, cells: typing.List[Cell]) -> None:
         self.thirst += 2
@@ -34,7 +36,7 @@ class Creature:
             elif self.thirst >= self.thirst_threshold:
                 self.seek_water(cells)
             elif self.hunger >= self.hunger_threshold:
-                self.seek_grass(cells)
+                self.seek_pasture(cells)
 
         if self.target_cell:
             return self.has_target()
@@ -46,8 +48,8 @@ class Creature:
             if random.random() < 0.5:
                 self.move_randomly()
 
-    def seek_grass(self, cells: typing.List[Cell]) -> None:
-        self.seek_closest_cell(cells, "grass")
+    def seek_pasture(self, cells: typing.List[Cell]) -> None:
+        self.seek_closest_cell(cells, self.pasture)
 
     def seek_water(self, cells: typing.List[Cell]) -> None:
         self.seek_closest_cell(cells, "water")
@@ -58,7 +60,7 @@ class Creature:
                 self.move_randomly()
             if self.thirst > 0 and self.target_cell.name == "water":
                 return self.drink()
-            if self.hunger > 0 and self.target_cell.name == "grass":
+            if self.hunger > 0 and self.target_cell.name == self.pasture:
                 return self.eat()
             if self.stamina > 0 and self.target_cell.name == "home":
                 return self.rest()
@@ -142,13 +144,15 @@ def generate_creatures(config, cells):
             speed = int(config[section]['speed'])
             color = [int(x) for x in config[section]['color'].split(',')]
             size = int(config[section]['size'])
+            pasture = config[section]['pasture']
+            predator = bool(config[section]['predator'])
             home_type = config[section]['home']
             possible_home_cells = [cell for cell in cells if cell.name == home_type]
             for _ in range(number):
                 new_home = random.choice(possible_home_cells)
-                creature = Creature(creature_type, new_home.x, new_home.y, speed, color, size)
+                creature = Creature(creature_type, new_home.x, new_home.y, speed, color, size, pasture, predator)
                 creatures.append(creature)
-                
+
     return creatures
 
-# 
+#

@@ -27,10 +27,9 @@ def main():
 
         for creature in creatures:
             creature.update(environment.cell_list)
-            
+
         environment.display(screen, font)
-        
-        
+
         for creature in creatures:
             creature.render(screen, environment.cell_size)
 
