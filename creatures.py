@@ -21,40 +21,65 @@ class Creature:
         self.stamina = random.randint(0, stamina_threshold)
         self.stamina_threshold = stamina_threshold
         self.target_cell: Cell = None
+        self.target_prey: Creature = None
         self.home = (x, y)
         self.pasture = pasture
         self.predator = predator
 
-    def update(self, cells: typing.List[Cell]) -> None:
+    def update(self, cells: typing.List[Cell], creatures: typing.List['Creature']) -> None:
         self.thirst += 2
         self.hunger += 2
         self.stamina += 2
 
-        if not self.target_cell:
-            if self.stamina >= self.stamina_threshold:
-                self.target_cell = Cell(self.home[0], self.home[1], "home", (0, 0, 0), 0, 0)
-            elif self.thirst >= self.thirst_threshold:
-                self.seek_water(cells)
-            elif self.hunger >= self.hunger_threshold:
-                self.seek_pasture(cells)
-
         if self.target_cell:
-            return self.has_target()
+            return self.has_target_cell()
 
-        distance_to_home = ((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5
-        if distance_to_home > 10:
-            self.move_towards_home()
+        if self.target_prey:
+            return self.has_target_prey()
+
+        if self.stamina >= self.stamina_threshold:
+            # Seek home
+            self.target_cell = Cell(self.home[0], self.home[1], "home", (0, 0, 0), 0, 0)
+        elif self.thirst >= self.thirst_threshold:
+            # Seek water
+            self.seek_water(cells)
+        elif self.hunger >= self.hunger_threshold:
+            # Seek food
+            # print(f"seeking food for {self.name} at {self.x}, {self.y} as I am a {'predator' if self.predator else 'prey'}")
+            if self.predator:
+                self.seek_prey(creatures)
+            else:
+                self.seek_pasture(cells)
         else:
-            if random.random() < 0.5:
-                self.move_randomly()
+            # Idle near home
+            distance_to_home = ((self.x - self.home[0]) ** 2 + (self.y - self.home[1]) ** 2) ** 0.5
+            if distance_to_home > 10:
+                self.move_towards_home()
+            else:
+                self.stamina -= 1
+                if random.random() < 0.5:
+                    self.move_randomly()
+
+    def seek_prey(self, creatures: typing.List['Creature']) -> None:
+        prey = [c for c in creatures if c.name != self.name]
+        if prey:
+            self.target_prey = min(prey, key=lambda p: ((p.x - self.x) ** 2 + (p.y - self.y) ** 2) ** 0.5)
+            print(f"closest prey: {self.target_prey .x}, {self.target_prey .y} and i am at {self.x}, {self.y}")
 
     def seek_pasture(self, cells: typing.List[Cell]) -> None:
         self.seek_closest_cell(cells, self.pasture)
+        print(f"closest pasture: {self.target_cell.x}, {self.target_cell.y} and i am at {self.x}, {self.y}")
 
     def seek_water(self, cells: typing.List[Cell]) -> None:
         self.seek_closest_cell(cells, "water")
 
+    def has_target_prey(self):
+        if self.target_prey.x == self.x and self.target_prey.y == self.y:
+            self.eat_prey(self.target_prey)
         else:
+            self.move_towards_target(self.target_prey)
+
+    def has_target_cell(self):
         if self.target_cell.x == self.x and self.target_cell.y == self.y:
             if random.random() < 0.1:
                 self.move_randomly()
@@ -66,7 +91,7 @@ class Creature:
                 return self.rest()
             self.target_cell = None  # reset target cell
         else:
-            self.move_towards_target()
+            self.move_towards_target(self.target_cell)
 
     # ... more methods ...
 
@@ -85,6 +110,13 @@ class Creature:
             self.target_cell = None
             # stop eatig and seek water
 
+    def eat_prey(self, prey):
+        self.hunger = 0  # fully satiated
+        self.stamina = self.stamina_threshold  # need rest asap
+        self.thirst += 100  # need water asap
+        self.target_prey = None
+        # prey.die()  # TODO implement
+
     def drink(self):
         self.thirst -= 50
         self.hunger -= 25  # to not bounce straight to eating
@@ -98,27 +130,27 @@ class Creature:
         if magnitude != 0:
             self.vx = dx / magnitude
             self.vy = dy / magnitude
-            self.x += self.vx * self.speed
-            self.y += self.vy * self.speed
+            self.x += int(self.vx * self.speed)
+            self.y += int(self.vy * self.speed)
 
     def move_randomly(self):
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         self.vx, self.vy = random.choice(directions)
-        self.x += self.vx * self.speed
-        self.y += self.vy * self.speed
+        self.x += int(self.vx * self.speed)
+        self.y += int(self.vy * self.speed)
 
-    def move_towards_target(self):
-        dx = self.target_cell.x - self.x
-        dy = self.target_cell.y - self.y
+    def move_towards_target(self, target):
+        dx = target.x - self.x
+        dy = target.y - self.y
         distance_to_target = (dx ** 2 + dy ** 2) ** 0.5
         if distance_to_target < self.speed:
-            self.x = self.target_cell.x
-            self.y = self.target_cell.y
+            self.x = target.x
+            self.y = target.y
         elif distance_to_target != 0:
             self.vx = dx / distance_to_target
             self.vy = dy / distance_to_target
-            self.x += self.vx * self.speed
-            self.y += self.vy * self.speed
+            self.x += int(self.vx * self.speed)
+            self.y += int(self.vy * self.speed)
 
     def render(self, screen, cell_size):
         x_pos = (self.x * cell_size) + (cell_size // 2)
@@ -158,5 +190,3 @@ def generate_creatures(config, cells):
                 creatures.append(creature)
 
     return creatures
-
-#

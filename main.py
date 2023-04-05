@@ -29,6 +29,8 @@ def main():
                     running = False
                 elif event.key == pygame.K_SPACE:
                     show_stats = not show_stats
+
+
         for creature in creatures:
             creature.update(environment.cell_list, creatures)
 
